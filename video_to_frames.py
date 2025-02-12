@@ -51,7 +51,7 @@ def find_duplicate_images(folder_path, hash_size=8, threshold=5):
                     diff = img_hash - existing_hash
                     if diff <= threshold:
                         # נמצא כפילות
-                        print(f"תמונה '{filename}' דומה ל '{hashes[existing_hash]}', הבדל: {diff}")
+                        print(f"photo '{filename}' similar to  '{hashes[existing_hash]}', differance: {diff}")
                         duplicates.append(file_path)
                         found = True
                         break
@@ -59,7 +59,7 @@ def find_duplicate_images(folder_path, hash_size=8, threshold=5):
                     # הוספת החתימה למילון
                     hashes[img_hash] = filename
             except Exception as e:
-                print(f"שגיאה בעיבוד התמונה '{filename}': {e}")
+                print(f"error prosses the photo '{filename}': {e}")
     return duplicates
 
 def delete_files(file_list):
@@ -68,7 +68,7 @@ def delete_files(file_list):
             os.remove(file_path)
             print(f"נמחק הקובץ: {file_path}")
         except Exception as e:
-            print(f"שגיאה במחיקת הקובץ '{file_path}': {e}")
+            print(f"error delete the file '{file_path}': {e}")
 
 
 ###########  Until here are the function deal with 'delete the duplications'
@@ -101,41 +101,53 @@ def extract_phone_numbers_from_images(folder_path):
     return all_numbers
 
 def select_video_file():
-    video_path = filedialog.askopenfilename(title="בחר סרטון", filetypes=(("MP4 files", "*.mp4"), ("All files", "*.*")))
+    video_path = filedialog.askopenfilename(title="Pick a video", filetypes=(("MP4 files", "*.mp4"), ("All files", "*.*")))
     if video_path:
         output_folder = 'frames'
         video_to_frames(video_path, output_folder)
 
         folder_path = output_folder
         duplicates = find_duplicate_images(folder_path)
-        if duplicates:
-            response = messagebox.askyesno("אישור מחיקה", "נמצאו תמונות דומות. האם למחוק אותן?")
+        """if duplicates:
+            response = messagebox.askyesno("confirm delete", "There are some similar photos. Do you want to delete?")
             if response:
                 delete_files(duplicates)
-                messagebox.showinfo("תוצאה", "תמונות כפולות נמחקו בהצלחה.")
+                messagebox.showinfo("Result", "Photos has seccsefuly removed.")
             else:
-                messagebox.showinfo("תוצאה", "המחיקה בוטלה.")
-        
+                messagebox.showinfo("Result", "Delete canceled.")"""
+        print("starting the delet operation")
+        delete_files(duplicates)
+        print("starting the extarct faze")
         numbers = extract_phone_numbers_from_images(folder_path)
         if numbers:
-            messagebox.showinfo("תוצאה", f"מספרי הטלפון שנמצאו:\n{', '.join(numbers)}")
+            numbers_file_path = os.path.join(folder_path, 'extracted_phone_numbers.txt')
+            save_numbers_to_file(numbers, numbers_file_path)
+            messagebox.showinfo("Result", f"Numbers have been saved to \n{numbers_file_path}")
         else:
-            messagebox.showinfo("תוצאה", "לא נמצאו מספרי טלפון.")
+            messagebox.showinfo("Result", "No phone numbers has been found.")
 
-# יצירת ממשק המשתמש
-root = tk.Tk()
-root.title("Video to Frames and Phone Number Extractor")
 
-frame = tk.Frame(root)
-frame.pack(pady=20, padx=20)
+def save_numbers_to_file(numbers, file_path):
+    with open(file_path, 'w') as f:
+        for number in numbers:
+            f.write(f"{number}\n")
+    print(f"מספרי הטלפון נשמרו בהצלחה בקובץ {file_path}")
+    
+if __name__ == "__main__":
+    # יצירת ממשק המשתמש
+    root = tk.Tk()
+    root.title("Video to Frames and Phone Number Extractor")
 
-select_button = tk.Button(frame, text="בחר סרטון", command=select_video_file)
-select_button.pack(pady=10)
+    frame = tk.Frame(root)
+    frame.pack(pady=20, padx=20)
 
-exit_button = tk.Button(frame, text="יציאה", command=root.quit)
-exit_button.pack(pady=10)
+    select_button = tk.Button(frame, text="בחר סרטון", command=select_video_file)
+    select_button.pack(pady=10)
 
-root.mainloop()
+    exit_button = tk.Button(frame, text="יציאה", command=root.quit)
+    exit_button.pack(pady=10)
+
+    root.mainloop()
 """
 if __name__ == "__main__":
     video_path = 'C:/Users/hrtom/Desktop/1.1.mp4'  # החלף לנתיב הסרטון שלך
